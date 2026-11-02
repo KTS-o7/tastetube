@@ -1,0 +1,59 @@
+# Our taste. The judge model reads the `taste` section as its brief.
+# Edit it freely: only the judge stage re-runs when it changes (cheap).
+
+taste:
+  who: >
+    An AI engineer who builds production LLM systems: agent memory, RAG and
+    evals. Strong CS fundamentals, so skip beginner material unless it is
+    exceptionally well made. Interested in offensive security and AI red
+    teaming. Wants to learn the craft of great explainer videos about system
+    design, computer science and history. Values depth, first principles and
+    clear thinking over hype.
+
+  facets:
+    - id: llm-systems
+      name: LLM systems
+      about: Building with LLMs in production. Inference and serving, agents, memory, retrieval and RAG, evals, fine-tuning, tokenizers.
+    - id: ml-first-principles
+      name: ML from first principles
+      about: How neural networks and transformers actually work. Backprop, optimisation, attention, scaling, built up from scratch.
+    - id: systems
+      name: Systems and design
+      about: Distributed systems, databases and storage engines, consensus, caching, queues, performance work, real stories of scale and outages.
+    - id: cs-core
+      name: CS core
+      about: Algorithms and data structures, operating systems, compilers, networking, computer architecture, low-level programming.
+    - id: security
+      name: Offensive security
+      about: Exploitation, reverse engineering, red teaming, AI and LLM security, the best conference talks (DEF CON, CCC, Black Hat).
+    - id: history
+      name: History
+      about: History of computing and engineering, and world history told well. Documentaries, lectures, narrative history.
+    - id: explainer-craft
+      name: Explainer craft
+      about: Exceptionally well-made explanations. Visual or animated, great storytelling. Reference for making our own explainer videos.
+    - id: building
+      name: Building companies
+      about: Technical founders, bootstrapping, selling to technical buyers, hard lessons from building products.
+
+  avoid:
+    - hype, drama, reaction or clickbait videos
+    - shallow listicles and "top 10" videos
+    - beginner tutorials for things we already know (intro Python, basic Git)
+
+  # YouTube URLs we already love. The judge uses their titles as taste anchors.
+  # Add 5-15 of your all-time favourites; this sharpens the ranking more than anything else.
+  seeds: []
+
+ranking:
+  # taste score = fit_weight[fit] x log2(1 + community score). Fit 0 is hidden in "Our taste" mode.
+  fit_weight: {1: 1.0, 2: 2.0, 3: 3.0}
+
+pipeline:
+  min_own_chars: 100        # a mention counts only with this much of the commenter's own text
+  min_people: 3             # ...from at least this many different people
+  min_months: 3             # ...across at least this many different months
+  mentions_per_video: 20    # labelled sample per video, spread across people
+  min_community_score: 2    # drop videos HN recommended in fewer months than this
+  label_model: claude-haiku-5-5
+  judge_model: claude-sonnet-5-5

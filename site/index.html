@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TasteTube</title>
+  <meta name="description" content="YouTube videos that Hacker News kept recommending, ranked for our taste.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231c2733'/%3E%3Crect x='7' y='18' width='4' height='8' fill='%23ff6a13'/%3E%3Crect x='14' y='11' width='4' height='15' fill='%23ff6a13'/%3E%3Crect x='21' y='6' width='4' height='20' fill='%23ff6a13'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="./" aria-label="TasteTube home">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="18" width="5" height="11" rx="1"/><rect x="13" y="10" width="5" height="19" rx="1"/><rect x="23" y="3" width="5" height="26" rx="1"/></svg>
+      TasteTube
+    </a>
+    <label class="search">
+      <span class="sr">Search</span>
+      <input id="q" type="search" placeholder="Search titles, channels, topics" autocomplete="off">
+    </label>
+    <div class="mode" role="group" aria-label="Library">
+      <button type="button" data-mode="taste" aria-pressed="true">Our taste</button>
+      <button type="button" data-mode="all" aria-pressed="false">All of HN</button>
+    </div>
+  </header>
+
+  <main>
+    <p id="banner" class="banner" hidden></p>
+    <h1 id="headline" class="headline">Loading the library</h1>
+    <nav id="chips" class="chips" aria-label="Filter"></nav>
+    <div class="sortbar">
+      <div id="sort" class="sort" role="group" aria-label="Sort">
+        <button type="button" data-sort="top" aria-pressed="true">Best for us</button>
+        <button type="button" data-sort="hn" aria-pressed="false">Most loved on HN</button>
+        <button type="button" data-sort="new" aria-pressed="false">Newest</button>
+      </div>
+      <p id="count" class="count"></p>
+    </div>
+    <p id="empty" class="empty" hidden></p>
+    <section id="grid" class="grid" aria-label="Videos"></section>
+    <div id="more" class="more" aria-hidden="true"></div>
+  </main>
+
+  <footer class="foot">
+    <p>Built from Hacker News comments in <a href="https://huggingface.co/datasets/open-index/hacker-news">open-index/hacker-news</a> (ODC-By 1.0). Idea from <a href="https://hackertube.org/">HackerTube</a> by Andrej Karpathy. Likes and hidden videos stay in this browser.</p>
+    <p><button type="button" id="help-open" class="linkish">Keyboard shortcuts</button> <button type="button" id="reset" class="linkish">Reset likes and hidden</button></p>
+  </footer>
+
+  <dialog id="player" class="player" aria-labelledby="p-title">
+    <div class="frame" id="p-frame"></div>
+    <div class="p-body">
+      <div class="p-head">
+        <h2 id="p-title"></h2>
+        <form method="dialog"><button class="close" aria-label="Close">×</button></form>
+      </div>
+      <p class="p-by" id="p-by"></p>
+      <p class="p-why" id="p-why"></p>
+      <p class="p-sum" id="p-sum"></p>
+      <div class="p-tags" id="p-tags"></div>
+      <div class="p-actions">
+        <button type="button" id="p-like" aria-pressed="false">Like</button>
+        <button type="button" id="p-hide">Hide</button>
+        <a id="p-yt" target="_blank" rel="noopener">Open on YouTube</a>
+      </div>
+      <div class="p-hn">
+        <div class="p-strip" id="p-strip"></div>
+        <h3>What Hacker News said</h3>
+        <ol class="quotes" id="p-quotes"></ol>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="help" class="help" aria-labelledby="h-title">
+    <h2 id="h-title">Keyboard shortcuts</h2>
+    <dl>
+      <dt>/</dt><dd>Search</dd>
+      <dt>j k</dt><dd>Next or previous video</dd>
+      <dt>Enter</dt><dd>Play the selected video</dd>
+      <dt>l</dt><dd>Like (trains For you)</dd>
+      <dt>x</dt><dd>Hide</dd>
+      <dt>w</dt><dd>Mark watched or unwatched</dd>
+      <dt>f</dt><dd>Go to For you</dd>
+      <dt>t</dt><dd>Switch between Our taste and All of HN</dd>
+      <dt>Esc</dt><dd>Close</dd>
+    </dl>
+    <form method="dialog"><button>Close</button></form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
