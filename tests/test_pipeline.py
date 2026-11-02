@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 import pytest
 
 from fakes import FakeClient
-from tastetube import build, config, extract, judge, label, rank, store
+from tastetube import build, config, extract, judge, label, rank, store, youtube
 from tastetube.llm import Job, Runner, make_key
 from tastetube.rank import community_score, taste_score
 
@@ -25,10 +25,16 @@ def link(vid):
     return f'<a href="https:&#x2F;&#x2F;www.youtube.com&#x2F;watch?v={vid}" rel="nofollow">x</a>'
 
 
+def plink(pl, vid=None):
+    url = f"watch?v={vid}&amp;list={pl}" if vid else f"playlist?list={pl}"
+    return f'<a href="https:&#x2F;&#x2F;www.youtube.com&#x2F;{url}" rel="nofollow">x</a>'
+
+
 GPT, RAFT, RICK, FEW, SHORT = "kCc8FmEb1nY", "RAFTtalk_01", "dQw4w9WgXcQ", "fewPeople01", "shortText01"
+COURSE, L1, L2 = "PL" + "x" * 32, "lecture0001", "lecture0002"
 
 ROWS = [
-    # GPT lecture: 4 people over 4 months; alice twice.
+    # GPT lecture: 5 people over 6 months; alice twice.
     (1, "alice", ts(2020, 1), 100, "Must watch. " + link(GPT) + PAD),
     (2, "bob", ts(2021, 3), 101, "Great transformer lecture " + link(GPT) + PAD),
     (3, "carol", ts(2022, 5), 3001, "Builds GPT from scratch " + link(GPT) + PAD),
@@ -38,7 +44,7 @@ ROWS = [
     (6, "erin", ts(2019, 2), 104, "Raft explained well " + link(RAFT) + PAD),
     (7, "frank", ts(2020, 6), 105, "Raft talk " + link(RAFT) + " and " + link(GPT) + PAD),
     (8, "grace", ts(2021, 9), 106, "Raft " + link(RAFT) + PAD),
-    # Rickroll: passes the gate, but every mention is a joke.
+    # Rickroll: passes the people/months gate, but it is 3.5 minutes long.
     (9, "h1", ts(2018, 1), 107, "Obligatory " + link(RICK) + PAD),
     (10, "h2", ts(2019, 1), 108, "Obligatory " + link(RICK) + PAD),
     (11, "h3", ts(2020, 1), 109, "Obligatory " + link(RICK) + PAD),
@@ -51,13 +57,38 @@ ROWS = [
     (16, "j3", ts(2020, 1), 114, "see " + link(SHORT)),
     # No YouTube ID at all (channel link): ignored.
     (17, "k", ts(2020, 1), 115, "https://www.youtube.com/@somechannel" + PAD),
+    # A whole course, recommended as a playlist by 3 people. One links a lecture inside it.
+    (18, "p1", ts(2017, 3), 116, "The best distributed systems course " + plink(COURSE) + PAD),
+    (19, "p2", ts(2019, 4), 117, "Do the labs " + plink(COURSE) + PAD),
+    (20, "p3", ts(2022, 2), 118, "Start with lecture 1 " + plink(COURSE, L1) + PAD),
 ]
 
-YT = {
-    GPT: ("Let's build GPT: from scratch, in code, spelled out.", "Andrej Karpathy"),
-    RAFT: ("Raft: understandable distributed consensus", "Some Conf"),
-    RICK: ("Never Gonna Give You Up", "Rick Astley"),
+VIDEOS = {
+    GPT: ("Let's build GPT: from scratch, in code, spelled out.", "Andrej Karpathy", 7000,
+          "0:00 intro\n12:30 bigram model\n40:00 self-attention\n1:20:00 transformer"),
+    RAFT: ("Raft: understandable distributed consensus", "Some Conf", 3000, "desc"),
+    RICK: ("Never Gonna Give You Up", "Rick Astley", 213, ""),
+    L1: ("Lecture 1: Introduction", "MIT", 4800, ""),
+    L2: ("Lecture 2: RPC and Threads", "MIT", 4700, ""),
 }
+
+
+class FakeYT:
+    calls = 0
+
+    def videos(self, ids):
+        self.calls += 1
+        assert len(ids) <= 50
+        return [youtube._row(i, 1, VIDEOS[i][0], VIDEOS[i][1], "2023-02-01T00:00:00Z", VIDEOS[i][3],
+                             VIDEOS[i][2], 1, 10) if i in VIDEOS else youtube._row(i, 0) for i in ids]
+
+    def playlists(self, ids):
+        return {COURSE: {"snippet": {"title": "Distributed Systems", "channelTitle": "MIT",
+                                     "publishedAt": "2020-01-01T00:00:00Z", "description": "Spring course"},
+                         "status": {"privacyStatus": "public"}}} if COURSE in ids else {}
+
+    def lecture_ids(self, pid):
+        return [L1, L2, "deletedLect"]
 
 
 @pytest.fixture
@@ -71,24 +102,28 @@ def env(tmp_path):
 
 
 def seed(con, cfg):
-    assert extract.ingest(con, ROWS) == 16
-    videos, kept = extract.select_candidates(con, cfg)
-    extract.store_roots(con, {cid: (900 + cid, f"Story {cid}") for cid in range(1, 17)})
-    for vid, (title, ch) in YT.items():
-        con.execute("INSERT INTO yt VALUES (?,1,?,?,'2023-02-01T00:00:00Z','desc',7000,1,10,0)", (vid, title, ch))
-    con.commit()
-    return videos, kept
+    assert extract.ingest(con, ROWS) == 19
+    extract.select_candidates(con, cfg)
+    extract.store_roots(con, {cid: (900 + cid, f"Story {cid}") for cid in range(1, 21)})
+    youtube.run(con, [], client=FakeYT())
 
 
 def test_gate_and_sampling(env):
     cfg, con = env
-    videos, kept = seed(con, cfg)
+    seed(con, cfg)
     cands = {r[0]: (r[1], r[2]) for r in con.execute("SELECT video_id, people, months FROM candidates")}
-    assert set(cands) == {GPT, RAFT, RICK}
-    assert cands[GPT] == (5, 6)  # alice, bob, carol, dave, frank; alice twice
-    # GPT is capped at 4 kept mentions, and alice's second comment (5) is dropped first.
+    assert set(cands) == {GPT, RAFT, RICK, COURSE}  # L1 has one mention, so it is not a candidate
+    assert cands[GPT] == (5, 6)
     gpt = [r[0] for r in con.execute("SELECT comment_id FROM kept WHERE video_id = ? ORDER BY 1", (GPT,))]
     assert len(gpt) == 4 and 5 not in gpt
+
+
+def test_course_meta(env):
+    cfg, con = env
+    seed(con, cfg)
+    row = con.execute("SELECT available, title, duration, items FROM yt WHERE video_id = ?", (COURSE,)).fetchone()
+    assert tuple(row) == (1, "Distributed Systems", 9500, 2)  # the deleted lecture does not count
+    assert [r[0] for r in con.execute("SELECT video_id FROM course_items ORDER BY pos")] == [L1, L2, "deletedLect"]
 
 
 def test_end_to_end(env):
@@ -100,23 +135,28 @@ def test_end_to_end(env):
     label.run(con, cfg, runner, confirm=False)
     labels = dict(((r[0], r[1]), r[2]) for r in con.execute("SELECT comment_id, video_id, label FROM labels"))
     assert labels[(1, GPT)] == "strong_recommendation"
-    assert labels[(9, RICK)] == "joke"
-    assert rank.run(con) == 3
+    assert labels[(18, COURSE)] == "recommendation"
+    assert not any(v == RICK for _, v in labels)  # the long-form gate stopped it before any LLM call
+    assert rank.run(con, cfg.pipeline.min_minutes) == 3
 
     judge.run(con, cfg, runner, confirm=False)
     fits = dict(con.execute("SELECT video_id, fit FROM judgments"))
-    assert fits == {GPT: 3, RAFT: 2}  # the rickroll scores 0 on HN, so it is never judged
+    assert fits == {GPT: 3, RAFT: 2, COURSE: 3}
 
     out = build.run(con, cfg)
     data = json.loads(out.read_text())
     ids = [v["id"] for v in data["videos"]]
-    assert ids == [GPT, RAFT]
-    top = data["videos"][0]
+    assert ids == [GPT, COURSE, RAFT]
+    top, course = data["videos"][0], data["videos"][1]
     assert top["f"] == 3 and top["fa"] == ["llm-systems", "ml-first-principles"]
+    assert top["md"] == "study" and top["tk"]
+    assert top["cp"][2] == [2400, "self-attention"]
     assert top["m"][0]["a"] == "alice" and len(top["m"]) == 3
     assert "youtube" not in top["m"][0]["x"].lower()
     assert top["hy"] == [2020, 2023]
-    assert data["meta"]["counts"]["ours"] == 2
+    assert course["cr"] == 1 and course["k"] == "course" and course["it"] == 2 and course["th"] == L1
+    assert [lec["id"] for lec in course["ls"]] == [L1, L2] and course["pr"] == "Go basics"
+    assert data["meta"]["counts"] == {"videos": 3, "courses": 1, "judged": 3, "ours": 3, "comments": 19}
 
     # Re-running pays nothing: every answer comes from the cache.
     created = client.messages.batches.created
@@ -128,6 +168,14 @@ def test_end_to_end(env):
     cfg.who += " Also likes Raft."
     judge.run(con, cfg, runner, confirm=False)
     assert client.messages.batches.created == created + 1
+
+
+def test_meta_is_incremental(env):
+    cfg, con = env
+    seed(con, cfg)
+    yt = FakeYT()
+    youtube.run(con, [], client=yt)
+    assert yt.calls == 0
 
 
 def test_resume_after_crash(env):

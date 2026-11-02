@@ -10,7 +10,7 @@ import sqlite3
 from datetime import datetime, timezone
 
 from tastetube.config import Config
-from tastetube.links import clean_text
+from tastetube.links import clean_text, is_course
 from tastetube.llm import Job, Runner, make_key
 
 LABELS = ["strong_recommendation", "recommendation", "neutral", "joke", "criticism"]
@@ -22,8 +22,10 @@ SCHEMA = {
     "additionalProperties": False,
 }
 
-SYSTEM = """You label Hacker News comments that link to a YouTube video.
-Decide what the commenter does with ONE target video. Answer with one label.
+SYSTEM = """You label Hacker News comments that link to YouTube.
+Decide what the commenter does with ONE target. Answer with one label.
+The target is either a single video or a course (a YouTube playlist of lectures).
+For a course, judge what the commenter says about the course or series as a whole.
 
 Labels:
 - strong_recommendation: the commenter is enthusiastic and pushes people to watch it.
@@ -59,12 +61,13 @@ Examples:
 
 
 def render(story_title: str | None, video_id: str, yt_title: str | None, channel: str | None,
-           author: str, ts: int, text: str) -> str:
+           author: str, ts: int, text: str, items: int = 0) -> str:
     month = datetime.fromtimestamp(ts, timezone.utc).strftime("%Y-%m")
     body = clean_text(text)[:1500]
+    target = f"course (playlist, {items} lectures)" if is_course(video_id) else "video"
     return (
         f"Story title: {story_title or '(unknown)'}\n"
-        f"Target video: {video_id} - \"{yt_title or '?'}\" by {channel or '?'}\n"
+        f"Target {target}: {video_id} - \"{yt_title or '?'}\" by {channel or '?'}\n"
         f"Comment by {author} ({month}):\n\"\"\"\n{body}\n\"\"\""
     )
 
@@ -74,18 +77,20 @@ def run(con: sqlite3.Connection, cfg: Config, runner: Runner, mode: str = "batch
     model = cfg.pipeline.label_model
     rows = con.execute(
         """
-        SELECT k.comment_id, k.video_id, c.story_title, y.title, y.channel, c.author, c.ts, c.text
+        SELECT k.comment_id, k.video_id, c.story_title, y.title, y.channel, c.author, c.ts, c.text, y.items
         FROM kept k
         JOIN comments c ON c.id = k.comment_id
         JOIN yt y ON y.video_id = k.video_id AND y.available = 1
+        WHERE y.duration >= ?   -- the long-form gate: short videos never cost an LLM call
         ORDER BY k.video_id, c.ts
-        """
+        """,
+        (cfg.pipeline.min_minutes * 60,),
     ).fetchall()
     if limit:
         rows = rows[:limit]
     jobs, ids = [], []
-    for cid, vid, story, title, channel, author, ts, text in rows:
-        user = render(story, vid, title, channel, author, ts, text)
+    for cid, vid, story, title, channel, author, ts, text, items in rows:
+        user = render(story, vid, title, channel, author, ts, text, items or 0)
         jobs.append(Job(make_key("label", model, SYSTEM, user), user))
         ids.append((cid, vid))
     results = runner.run("label", model, SYSTEM, jobs, SCHEMA, max_tokens=32, mode=mode, confirm=confirm)

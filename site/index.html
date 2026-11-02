@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>TasteTube</title>
-  <meta name="description" content="YouTube videos that Hacker News kept recommending, ranked for our taste.">
+  <meta name="description" content="Long-form videos and courses that Hacker News kept recommending, ranked for our taste.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231c2733'/%3E%3Crect x='7' y='18' width='4' height='8' fill='%23ff6a13'/%3E%3Crect x='14' y='11' width='4' height='15' fill='%23ff6a13'/%3E%3Crect x='21' y='6' width='4' height='20' fill='%23ff6a13'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,6 +32,13 @@
     <h1 id="headline" class="headline">Loading the library</h1>
     <nav id="chips" class="chips" aria-label="Filter"></nav>
     <div class="sortbar">
+      <div id="len" class="sort" role="group" aria-label="Length">
+        <button type="button" data-len="any" aria-pressed="true">Any length</button>
+        <button type="button" data-len="h1" aria-pressed="false">Under 1 hour</button>
+        <button type="button" data-len="h2" aria-pressed="false">1 to 2 hours</button>
+        <button type="button" data-len="long" aria-pressed="false">Over 2 hours</button>
+        <button type="button" data-len="course" aria-pressed="false">Courses</button>
+      </div>
       <div id="sort" class="sort" role="group" aria-label="Sort">
         <button type="button" data-sort="top" aria-pressed="true">Best for us</button>
         <button type="button" data-sort="hn" aria-pressed="false">Most loved on HN</button>
@@ -59,11 +66,23 @@
       <p class="p-by" id="p-by"></p>
       <p class="p-why" id="p-why"></p>
       <p class="p-sum" id="p-sum"></p>
+      <dl class="p-card" id="p-card"></dl>
       <div class="p-tags" id="p-tags"></div>
       <div class="p-actions">
         <button type="button" id="p-like" aria-pressed="false">Like</button>
         <button type="button" id="p-hide">Hide</button>
         <a id="p-yt" target="_blank" rel="noopener">Open on YouTube</a>
+      </div>
+      <div class="p-course" id="p-course" hidden>
+        <div class="p-course-head">
+          <h3 id="p-progress"></h3>
+          <button type="button" id="p-continue"></button>
+        </div>
+        <ol class="lectures" id="p-lectures"></ol>
+      </div>
+      <div class="p-chapters" id="p-chapters" hidden>
+        <h3>Chapters</h3>
+        <ol class="chapters" id="p-chapter-list"></ol>
       </div>
       <div class="p-hn">
         <div class="p-strip" id="p-strip"></div>
@@ -82,6 +101,7 @@
       <dt>l</dt><dd>Like (trains For you)</dd>
       <dt>x</dt><dd>Hide</dd>
       <dt>w</dt><dd>Mark watched or unwatched</dd>
+      <dt>n</dt><dd>In a course, mark this lecture done and play the next</dd>
       <dt>f</dt><dd>Go to For you</dd>
       <dt>t</dt><dd>Switch between Our taste and All of HN</dd>
       <dt>Esc</dt><dd>Close</dd>

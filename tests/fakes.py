@@ -20,14 +20,21 @@ def answer(params: dict) -> dict:
         return {"label": "recommendation"}
     facets = schema["properties"]["facets"]["items"]["enum"]
     assert "Who we are" in system
+    card = {"takeaway": "How it works inside.", "prereqs": "", "mode": "focused"}
+    if user.startswith("Course"):
+        assert "Lectures:" in user
+        return {**card, "summary": "A distributed systems course.", "why": "The whole field, in order.",
+                "facets": ["systems"], "fit": 3, "category": "Systems & Infrastructure", "kind": "course",
+                "mode": "study", "prereqs": "Go basics"}
     if "transformer" in user.lower() or "gpt" in user.lower():
-        return {"summary": "A lecture that builds a GPT from scratch.", "why": "First-principles LLM internals.",
-                "facets": [facets[0], facets[1]], "fit": 3, "category": "AI & Machine Learning", "kind": "lecture"}
+        return {**card, "summary": "A lecture that builds a GPT from scratch.", "why": "First-principles LLM internals.",
+                "facets": [facets[0], facets[1]], "fit": 3, "category": "AI & Machine Learning", "kind": "lecture",
+                "mode": "study"}
     if "raft" in user.lower():
-        return {"summary": "A talk on the Raft consensus algorithm.", "why": "Clear consensus intuition.",
+        return {**card, "summary": "A talk on the Raft consensus algorithm.", "why": "Clear consensus intuition.",
                 "facets": ["systems"], "fit": 2, "category": "Systems & Infrastructure", "kind": "talk"}
-    return {"summary": "A music video.", "why": "", "facets": [], "fit": 0,
-            "category": "Music", "kind": "music"}
+    return {**card, "summary": "A music video.", "why": "", "facets": [], "fit": 0,
+            "category": "Music", "kind": "music", "mode": "easy"}
 
 
 def message(params: dict):

@@ -1,4 +1,21 @@
-from tastetube.links import clean_text, excerpt, extract_ids, own_text
+from tastetube.links import clean_text, excerpt, extract_ids, extract_playlists, is_course, own_text, parse_chapters
+
+PL = "PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf"
+
+
+def test_playlists():
+    assert extract_playlists(f"https:&#x2F;&#x2F;www.youtube.com&#x2F;playlist?list={PL}") == [PL]
+    assert extract_playlists(f"youtube.com/watch?v=kCc8FmEb1nY&amp;list={PL}&amp;index=2") == [PL]
+    assert extract_playlists("youtube.com/watch?v=kCc8FmEb1nY&list=RDkCc8FmEb1nY") == []  # a mix, not a course
+    assert extract_playlists(f"example.com/?list={PL}") == []
+    assert is_course(PL) and not is_course("kCc8FmEb1nY")
+
+
+def test_chapters():
+    desc = "Intro text\n0:00 Intro\n(05:10) The problem\n1:02:03 - Wrap up\nnot 9:99 a chapter"
+    assert parse_chapters(desc) == [(0, "Intro"), (310, "The problem"), (3723, "Wrap up")]
+    assert parse_chapters("1:00 a\n2:00 b\n3:00 c") == []  # YouTube requires the first at 0:00
+    assert parse_chapters("0:00 a\n2:00 b") == []  # and at least 3
 
 # Real HN storage format: '/' is escaped as &#x2F; and '&' as &amp; inside links.
 HN = (

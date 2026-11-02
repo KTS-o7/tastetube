@@ -82,12 +82,12 @@ def main(argv: list[str] | None = None) -> int:
         youtube.run(con, cfg.seed_ids)
     elif args.cmd == "label":
         label.run(con, cfg, runner, mode, limit, confirm)
-        print(f"score: {rank.run(con):,} videos scored")
+        print(f"score: {rank.run(con, cfg.pipeline.min_minutes):,} videos scored")
     elif args.cmd == "judge":
-        rank.run(con)
+        rank.run(con, cfg.pipeline.min_minutes)
         judge.run(con, cfg, runner, mode, limit, confirm)
     elif args.cmd == "build":
-        rank.run(con)
+        rank.run(con, cfg.pipeline.min_minutes)
         build.run(con, cfg)
     elif args.cmd == "stats":
         stats(con)
@@ -95,7 +95,7 @@ def main(argv: list[str] | None = None) -> int:
         extract.run(con, cfg)
         youtube.run(con, cfg.seed_ids)
         label.run(con, cfg, runner, "batch", None, confirm)
-        rank.run(con)
+        rank.run(con, cfg.pipeline.min_minutes)
         judge.run(con, cfg, runner, "batch", None, confirm)
         build.run(con, cfg)
     return 0

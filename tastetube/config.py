@@ -29,6 +29,7 @@ class Pipeline:
     min_months: int = 3
     mentions_per_video: int = 20
     min_community_score: float = 2.0
+    min_minutes: int = 30
     label_model: str = "claude-haiku-5-5"
     judge_model: str = "claude-sonnet-5-5"
 

@@ -9,8 +9,8 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 
 from tastetube.config import Config
-from tastetube.judge import LABEL_RANK
-from tastetube.links import excerpt, own_text
+from tastetube.judge import LABEL_RANK, lectures
+from tastetube.links import excerpt, is_course, own_text, parse_chapters
 from tastetube.rank import taste_score
 
 
@@ -22,16 +22,16 @@ def collect(con: sqlite3.Connection, cfg: Config) -> dict:
     taste = cfg.taste_hash()
     rows = con.execute(
         """
-        SELECT y.video_id, y.title, y.channel, y.published, y.duration, y.embeddable,
-               s.community, s.rec_months, s.rec_people, cd.first_ts, cd.last_ts,
-               j.fit, j.facets, j.why, j.summary, j.category, j.kind
+        SELECT y.video_id, y.title, y.channel, y.published, y.duration, y.embeddable, y.description,
+               y.items, s.community, s.rec_months, s.rec_people, cd.first_ts, cd.last_ts,
+               j.fit, j.facets, j.why, j.summary, j.category, j.kind, j.takeaway, j.prereqs, j.mode
         FROM scores s
         JOIN yt y ON y.video_id = s.video_id AND y.available = 1
         JOIN candidates cd ON cd.video_id = s.video_id
         LEFT JOIN judgments j ON j.video_id = s.video_id AND j.taste = ?
-        WHERE s.community >= ?
+        WHERE s.community >= ? AND y.duration >= ?
         """,
-        (taste, cfg.pipeline.min_community_score),
+        (taste, cfg.pipeline.min_community_score, cfg.pipeline.min_minutes * 60),
     ).fetchall()
     ments = defaultdict(list)
     for vid, label, cid, author, ts, story_id, story, text in con.execute(
@@ -46,8 +46,11 @@ def collect(con: sqlite3.Connection, cfg: Config) -> dict:
             "st": story, "s": story_id,
         }))
     videos = []
-    for (vid, title, channel, published, duration, embeddable, community, rec_months, rec_people,
-         first_ts, last_ts, fit, facets, why, summary, category, kind) in rows:
+    for (vid, title, channel, published, duration, embeddable, desc, items, community, rec_months,
+         rec_people, first_ts, last_ts, fit, facets, why, summary, category, kind, takeaway, prereqs,
+         mode) in rows:
+        course = is_course(vid)
+        ls = [{"id": i, "t": t, "d": d} for i, t, d in lectures(con, vid)] if course else []
         best = [m for _, _, m in sorted(ments[vid], key=lambda m: (m[0], -len(m[2]["x"])))[:3]]
         years = sorted({m["y"] for _, _, m in ments[vid] if m["y"]})
         videos.append({
@@ -56,7 +59,11 @@ def collect(con: sqlite3.Connection, cfg: Config) -> dict:
             "hy": [_year(first_ts), _year(last_ts)], "yr": years,
             "f": fit, "ts": taste_score(community, fit, cfg.fit_weight),
             "fa": json.loads(facets) if facets else [], "w": why or "", "su": summary or "",
-            "c": category or "Other", "k": kind or "other", "m": best,
+            "c": category or "Other", "k": "course" if course else (kind or "other"), "m": best,
+            "tk": takeaway or "", "pr": prereqs or "", "md": mode or "",
+            "cr": int(course), "it": items or 0, "ls": ls,
+            "th": ls[0]["id"] if ls else vid,
+            "cp": [] if course else [[sec, t] for sec, t in parse_chapters(desc)],
         })
     videos.sort(key=lambda v: (-v["ts"], -v["s"], v["id"]))
     judged = sum(v["f"] is not None for v in videos)
@@ -64,9 +71,11 @@ def collect(con: sqlite3.Connection, cfg: Config) -> dict:
         "meta": {
             "generated": date.today().isoformat(),
             "demo": False,
+            "min_minutes": cfg.pipeline.min_minutes,
             "facets": [{"id": f.id, "name": f.name, "about": f.about} for f in cfg.facets],
             "counts": {
                 "videos": len(videos),
+                "courses": sum(v["cr"] for v in videos),
                 "judged": judged,
                 "ours": sum(1 for v in videos if v["f"]),
                 "comments": con.execute("SELECT COUNT(*) FROM comments").fetchone()[0],

@@ -61,7 +61,7 @@ main { padding: 0 var(--gutter); max-width: 1600px; margin: 0 auto; }
 
 .headline {
   font-weight: 600; font-size: clamp(26px, 4.2vw, 46px); line-height: 1.08; letter-spacing: -0.025em;
-  max-width: 22ch; margin: 34px 0 22px;
+  max-width: 28ch; margin: 34px 0 22px;
 }
 .headline .n-hn { color: var(--hn); }
 .headline .n-us { color: var(--taste); }
@@ -169,3 +169,35 @@ dialog::backdrop { background: rgba(8, 12, 16, .72); }
   .p-body { padding: 14px 16px 22px; }
   .player { width: 100vw; max-height: 100vh; border-radius: 0; }
 }
+
+/* Long-form additions */
+.sortbar .sort + .sort { margin-left: 0; }
+#len { overflow-x: auto; scrollbar-width: none; max-width: 100%; }
+#len::-webkit-scrollbar { display: none; }
+
+/* A course looks like a stack of lectures. */
+.thumb.stack { overflow: visible; box-shadow: 6px -6px 0 -1px var(--ground), 6px -6px 0 0 var(--rule), 12px -12px 0 -1px var(--ground), 12px -12px 0 0 var(--rule); margin: 12px 12px 0 0; }
+.thumb.stack img { border-radius: 12px; }
+
+.md { white-space: nowrap; font-size: 13px; padding: 0 7px; border-radius: 5px; margin-left: 4px; border: 1px solid var(--rule); color: var(--muted); }
+.md-study { border-color: var(--ink); color: var(--ink); }
+
+.p-card { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 14px 0 0; max-width: 72ch; }
+.p-card dt { color: var(--muted); }
+.p-card dd { margin: 0; }
+
+.p-course, .p-chapters { margin-top: 22px; }
+.p-course-head { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.p-course h3, .p-chapters h3 { font-size: 16px; margin: 0 0 8px; }
+.p-course-head h3 { margin: 0; }
+#p-continue { border: 1px solid var(--taste); background: var(--taste); color: var(--surface); border-radius: 8px; padding: 6px 14px; cursor: pointer; }
+.lectures, .chapters { list-style: none; padding: 0; margin: 10px 0 0; max-height: 320px; overflow-y: auto; border-top: 1px solid var(--rule); }
+.lectures li { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; padding: 6px 2px; border-bottom: 1px solid var(--rule); }
+.lectures li input { width: 18px; height: 18px; accent-color: var(--taste); }
+.lectures li button, .chapters button { border: 0; background: none; padding: 2px 0; text-align: left; cursor: pointer; }
+.lectures li span { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.lectures li.done button { color: var(--muted); text-decoration: line-through; }
+.lectures li.now button { font-weight: 700; color: var(--taste); }
+.chapters li { border-bottom: 1px solid var(--rule); }
+.chapters button { width: 100%; padding: 6px 2px; }
+.chapters button span { display: inline-block; min-width: 4.5em; color: var(--hn); font-variant-numeric: tabular-nums; }

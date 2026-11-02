@@ -3,6 +3,7 @@
 - Pipeline stages share one SQLite file, `work/tastetube.db`. Each stage reads and writes it and can re-run alone.
 - Never delete `llm_cache` or `batches` rows: they are paid-for answers and in-flight batches.
 - DuckDB is used only in `tastetube/extract.py` for the 12 GB Parquet archive. Keep other logic in Python and SQLite so tests stay offline.
-- Tests use `tests/fakes.py` instead of the Anthropic client. Run `pytest -q` after every change.
+- Tests use `tests/fakes.py` (fake Claude) and `FakeYT` in `tests/test_pipeline.py` (fake YouTube). Run `pytest -q` after every change.
+- An item ID longer than 11 characters is a course (playlist); see `links.is_course`. The long-form gate (`min_minutes`) runs before labelling.
 - `site/` is plain HTML, CSS and JavaScript with no build step. It reads only `site/data/videos.json` (falls back to `demo.json`).
 - The judge's cache key includes the full system prompt, so any change to `taste.yaml` or the prompt re-judges every video.

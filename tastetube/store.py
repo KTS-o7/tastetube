@@ -26,10 +26,15 @@ CREATE TABLE IF NOT EXISTS candidates (
 CREATE TABLE IF NOT EXISTS kept (
     comment_id INTEGER, video_id TEXT, PRIMARY KEY (comment_id, video_id)
 );
+-- Metadata for videos and for courses (playlists). For a course, `duration` is the
+-- total of its lectures and `items` is how many lectures it has.
 CREATE TABLE IF NOT EXISTS yt (
     video_id TEXT PRIMARY KEY, available INTEGER, title TEXT, channel TEXT,
     published TEXT, description TEXT, duration INTEGER, embeddable INTEGER,
-    views INTEGER, fetched_at INTEGER
+    views INTEGER, items INTEGER, fetched_at INTEGER
+);
+CREATE TABLE IF NOT EXISTS course_items (
+    course_id TEXT, pos INTEGER, video_id TEXT, PRIMARY KEY (course_id, pos)
 );
 CREATE TABLE IF NOT EXISTS labels (
     comment_id INTEGER, video_id TEXT, label TEXT, PRIMARY KEY (comment_id, video_id)
@@ -40,7 +45,8 @@ CREATE TABLE IF NOT EXISTS scores (
 );
 CREATE TABLE IF NOT EXISTS judgments (
     video_id TEXT, taste TEXT, fit INTEGER, facets TEXT, why TEXT,
-    summary TEXT, category TEXT, kind TEXT, PRIMARY KEY (video_id, taste)
+    summary TEXT, category TEXT, kind TEXT, takeaway TEXT, prereqs TEXT, mode TEXT,
+    PRIMARY KEY (video_id, taste)
 );
 -- Every LLM answer, keyed by a hash of (model, prompt, input).
 CREATE TABLE IF NOT EXISTS llm_cache (

@@ -23,14 +23,54 @@ _SPACES = re.compile(r"[ \t]+")
 _BLANKS = re.compile(r"\n{3,}")
 
 
+# Playlists. Only creator playlists ('PL...') are courses and series. Mixes ('RD'),
+# albums ('OLAK5uy_') and uploads ('UU') are not things people recommend as a course.
+_PLAYLIST = re.compile(
+    r"youtube(?:-nocookie)?\.com/[^\s\"'<>]*?[?&]list=(PL[A-Za-z0-9_-]{16,34})(?![A-Za-z0-9_-])",
+    re.IGNORECASE,
+)
+# A description line that starts a chapter: "12:34 Title", "1:02:03 - Title", "(0:00) Intro".
+_CHAPTER = re.compile(r"^\s*[\[(]?((?:\d{1,2}:)?\d{1,2}:\d{2})[\])]?\s*[-–—:|]?\s+(.+?)\s*$")
+
+
+def _unique(items) -> list[str]:
+    return list(dict.fromkeys(items))
+
+
 def extract_ids(raw: str | None) -> list[str]:
     """Return the unique YouTube video IDs in a comment, in order of first use."""
     if not raw:
         return []
-    seen: dict[str, None] = {}
-    for vid in _YT.findall(html.unescape(raw)):
-        seen.setdefault(vid, None)
-    return list(seen)
+    return _unique(_YT.findall(html.unescape(raw)))
+
+
+def extract_playlists(raw: str | None) -> list[str]:
+    """Return the unique playlist (course or series) IDs in a comment."""
+    if not raw:
+        return []
+    return _unique(_PLAYLIST.findall(html.unescape(raw)))
+
+
+def is_course(item_id: str) -> bool:
+    """Video IDs are exactly 11 characters. Playlist IDs are 18 or more."""
+    return len(item_id) > 11
+
+
+def parse_chapters(description: str | None) -> list[tuple[int, str]]:
+    """Chapters from a YouTube description. YouTube's own rule: first at 0:00, 3 or more."""
+    out: list[tuple[int, str]] = []
+    for line in (description or "").splitlines():
+        m = _CHAPTER.match(line)
+        if not m:
+            continue
+        parts = [int(p) for p in m.group(1).split(":")]
+        sec = sum(p * 60**i for i, p in enumerate(reversed(parts)))
+        if out and sec <= out[-1][0]:
+            continue
+        out.append((sec, m.group(2)[:90]))
+    if len(out) < 3 or out[0][0] != 0:
+        return []
+    return out
 
 
 def clean_text(raw: str | None) -> str:

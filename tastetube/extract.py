@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from tastetube.config import Config
-from tastetube.links import extract_ids, own_text
+from tastetube.links import extract_ids, extract_playlists, own_text
 
 MAX_DEPTH = 1000  # the deepest HN threads are a few hundred levels
 
@@ -49,13 +49,17 @@ def scan_youtube_comments(glob: str) -> Iterator[tuple]:
 
 
 def ingest(con: sqlite3.Connection, rows: Iterable[tuple]) -> int:
-    """Store comments that contain at least one YouTube video ID."""
+    """Store comments that link at least one YouTube video or course playlist.
+
+    A link like watch?v=X&list=PLY counts as a mention of both the lecture X and
+    the course Y. The labeler later judges each target on its own.
+    """
     con.execute("DELETE FROM comments")
     con.execute("DELETE FROM mentions")
     n = 0
     batch_c, batch_m = [], []
     for cid, author, ts, parent, raw in rows:
-        ids = extract_ids(raw)
+        ids = extract_ids(raw) + extract_playlists(raw)
         if not ids:
             continue
         month = datetime.fromtimestamp(ts, timezone.utc).strftime("%Y-%m")

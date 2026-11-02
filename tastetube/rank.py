@@ -37,14 +37,16 @@ def taste_score(community: float, fit: int | None, weights: dict[int, float]) ->
     return round(weights.get(fit, 0.0) * math.log2(1 + community), 4)
 
 
-def run(con: sqlite3.Connection) -> int:
+def run(con: sqlite3.Connection, min_minutes: int = 0) -> int:
     rows = con.execute(
         """
         SELECT l.video_id, c.month, c.author, l.label
         FROM labels l
         JOIN comments c ON c.id = l.comment_id
         JOIN yt y ON y.video_id = l.video_id AND y.available = 1
-        """
+        WHERE y.duration >= ?
+        """,
+        (min_minutes * 60,),
     ).fetchall()
     by_video: dict[str, list] = defaultdict(list)
     people: dict[str, set] = defaultdict(set)
