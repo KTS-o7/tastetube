@@ -2,7 +2,7 @@
 
 TasteTube is a long-form watch list. It finds the lectures, talks, documentaries and whole courses that Hacker News commenters kept recommending from 2007 to today. It ranks them for our taste, set in [`taste.yaml`](taste.yaml), and tells you what each one asks of you before you commit an evening or a month.
 
-It starts from the method of [HackerTube](https://hackertube.org/) by Andrej Karpathy. It differs in four ways.
+It starts from the method of [HackerTube](https://hackertube.org/), which Claude built after a prompt from Andrej Karpathy. It differs in four ways.
 
 | | HackerTube | TasteTube |
 |---|---|---|
@@ -33,6 +33,25 @@ It starts from the method of [HackerTube](https://hackertube.org/) by Andrej Kar
 - Videos with chapters in their YouTube description show them as jump links.
 - **For you** re-ranks from the items you like.
 - Likes, progress and hidden items stay in your browser. There are no accounts.
+
+## Courses from HackerTube's data (no API keys)
+
+HackerTube publishes its labelled data: 6,454 videos with cards and 39,834 labelled HN comments, under ODC-By 1.0. The live site is built from it with one command. It needs no API key and spends nothing.
+
+1. Download and unzip [hackertube-data.zip](https://hackertube.org/data) (17.8 MB) anywhere outside the repository.
+2. Edit [`courses.yaml`](courses.yaml). Each course is an ordered list of video ids from that data, with a card: why, summary, what you come away with, what to know first, how to watch it.
+3. Run the command, commit `site/data/videos.json`, and push:
+
+```bash
+tastetube hackertube --data ../hackertube-data   # writes site/data/videos.json
+```
+
+What it writes:
+
+- **Our taste**: the courses from `courses.yaml`, in file order.
+- **All of HN**: every recommended talk, lecture, course, documentary, interview and podcast in the data (about 2,300), with HackerTube's summary, why HN likes it, and up to 3 real HN quotes.
+
+The data has no video lengths, because YouTube's terms do not allow redistributing them. So the site turns off the length filters, and "long-form" here means the video type, not its measured length.
 
 ## Run it
 
@@ -99,7 +118,8 @@ Prices were checked on 2 November 2026 on the [Claude pricing page](https://plat
 
 - Source: [open-index/hacker-news](https://huggingface.co/datasets/open-index/hacker-news) on Hugging Face, under the Open Data Commons Attribution License (ODC-By) 1.0. The site credits it in its footer.
 - Comment excerpts on the site are short and link back to the original comment on Hacker News.
-- Method: [HackerTube](https://hackertube.org/) by Andrej Karpathy.
+- Courses and library: [HackerTube](https://hackertube.org/)'s open data (ODC-By 1.0). The site credits it in its banner and footer. Its labels and summaries were written by an LLM, so expect a few to be off.
+- Method: [HackerTube](https://hackertube.org/).
 - Code: MIT licence.
 
 ## Repository layout

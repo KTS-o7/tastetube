@@ -57,8 +57,8 @@ function hours(sec) {
 }
 
 function length(v) {
-  if (!v.d) return "";
-  return v.cr ? `${v.it} lectures, ${hours(v.d)}` : clock(v.d);
+  if (v.cr) return v.d ? `${v.it} lectures, ${hours(v.d)}` : `${v.it} lectures`;
+  return v.d ? clock(v.d) : "";
 }
 
 function thumb(id) {
@@ -158,7 +158,7 @@ function card(v, i) {
   return `<article class="card${watched && !v.cr ? " watched" : ""}" tabindex="0" data-i="${i}" aria-label="${esc(v.t)}">
     <div class="thumb${v.cr ? " stack" : ""}">
       <img loading="lazy" src="${thumb(v.th)}" alt="" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/${esc(v.th)}/hqdefault.jpg'">
-      ${v.d ? `<span class="dur">${esc(length(v))}</span>` : ""}
+      ${length(v) ? `<span class="dur">${esc(length(v))}</span>` : ""}
       ${badge}
     </div>
     <h3>${state.liked.has(v.id) ? '<span class="liked-mark" aria-label="Liked">♥ </span>' : ""}${esc(v.t)}</h3>
@@ -195,6 +195,11 @@ function headline() {
   const c = state.data.meta.counts;
   const fmt = (n) => Number(n || 0).toLocaleString("en-IN");
   const what = c.courses ? `long-form videos and courses` : `long-form videos`;
+  if (state.data.meta.source === "hackertube") {
+    return state.mode === "taste"
+      ? `<span class="n-us">${fmt(c.ours)}</span> courses we built from <span class="n-hn">${fmt(c.videos)}</span> long-form talks and lectures Hacker News kept recommending.`
+      : `<span class="n-hn">${fmt(c.videos)}</span> long-form talks, lectures and documentaries Hacker News kept recommending, ${FIRST_YEAR} to ${state.lastYear}.`;
+  }
   if (state.mode === "taste") {
     return `<span class="n-hn">${fmt(c.videos)}</span> ${what} Hacker News kept recommending. <span class="n-us">${fmt(c.ours)}</span> are worth our time.`;
   }
@@ -242,8 +247,11 @@ function embed(id, start, list) {
 function play(id, start = 0) {
   const v = state.open;
   state.playing = id;
+  $("#p-yt").href = v.cr && !v.cu
+    ? `https://www.youtube.com/playlist?list=${encodeURIComponent(v.id)}`
+    : `https://www.youtube.com/watch?v=${encodeURIComponent(id)}`;
   $("#p-frame").innerHTML = v.e || v.cr
-    ? embed(id, start, v.cr ? v.id : null)
+    ? embed(id, start, v.cr && !v.cu ? v.id : null)
     : `<div class="noembed"><img src="${thumb(id)}" alt=""><p>The owner turned off playback on other sites. <a href="https://www.youtube.com/watch?v=${esc(id)}&amp;t=${start}" target="_blank" rel="noopener">Watch it on YouTube</a>.</p></div>`;
   if (v.cr) renderCourse(v);
 }
@@ -254,7 +262,7 @@ function nextLecture(v) {
 
 function renderCourse(v) {
   const done = progress(v);
-  $("#p-progress").textContent = done ? `${done} of ${v.it} lectures done` : `${v.it} lectures, ${hours(v.d)}`;
+  $("#p-progress").textContent = done ? `${done} of ${v.it} lectures done` : length(v);
   const next = nextLecture(v);
   const pos = v.ls.indexOf(next) + 1;
   $("#p-continue").textContent = done ? `Continue with lecture ${pos}` : "Start lecture 1";
@@ -262,7 +270,7 @@ function renderCourse(v) {
   $("#p-lectures").innerHTML = v.ls.map((l, i) => `<li class="${state.done.has(l.id) ? "done" : ""}${state.playing === l.id ? " now" : ""}">
       <input type="checkbox" id="lec-${i}" data-done="${esc(l.id)}" ${state.done.has(l.id) ? "checked" : ""} aria-label="Mark lecture ${i + 1} done">
       <button type="button" data-play="${esc(l.id)}">${esc(l.t)}</button>
-      <span>${clock(l.d)}</span>
+      <span>${l.d ? clock(l.d) : esc(l.ch || "")}</span>
     </li>`).join("");
 }
 
@@ -272,7 +280,7 @@ function openVideo(v) {
   $("#p-title").textContent = v.t;
   $("#p-by").textContent = [v.ch, v.y, length(v)].filter(Boolean).join(", ");
   $("#p-why").textContent = v.w || "";
-  $("#p-why").hidden = !v.w || !v.f;
+  $("#p-why").hidden = !v.w;
   $("#p-sum").textContent = v.su || "";
   const rows = [];
   if (v.tk) rows.push(["You come away with", v.tk]);
@@ -283,9 +291,6 @@ function openVideo(v) {
   if (state.mode === "all" || !tags.length) tags.push(v.c);
   $("#p-tags").innerHTML = tags.map((t) => `<span>${esc(t)}</span>`).join("");
   likeButton(v);
-  $("#p-yt").href = v.cr
-    ? `https://www.youtube.com/playlist?list=${encodeURIComponent(v.id)}`
-    : `https://www.youtube.com/watch?v=${encodeURIComponent(v.id)}`;
   $("#p-course").hidden = !v.cr;
   $("#p-chapters").hidden = !(v.cp && v.cp.length);
   $("#p-chapter-list").innerHTML = (v.cp || []).map(([sec, t]) => `<li><button type="button" data-seek="${sec}"><span>${clock(sec)}</span> ${esc(t)}</button></li>`).join("");
@@ -466,6 +471,19 @@ async function main() {
     const b = document.querySelector('.mode button[data-mode="taste"]');
     b.disabled = true;
     b.title = "Run `tastetube judge` to rank videos for our taste.";
+  }
+  if (data.meta.durations === false) {
+    document.querySelectorAll("#len button").forEach((b) => {
+      if (b.dataset.len === "any" || b.dataset.len === "course") return;
+      b.disabled = true;
+      b.title = "Video lengths are not loaded yet.";
+    });
+    if (state.len !== "course") state.len = "any";
+  }
+  if (data.meta.source === "hackertube") {
+    const banner = $("#banner");
+    banner.hidden = false;
+    banner.innerHTML = 'Videos, summaries and Hacker News quotes come from <a href="https://hackertube.org/data">HackerTube’s open data</a> (ODC-By 1.0). The courses are our own picks and order.';
   }
   if (data.meta.demo) {
     const banner = $("#banner");

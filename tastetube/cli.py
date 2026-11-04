@@ -6,7 +6,7 @@ import argparse
 import os
 from pathlib import Path
 
-from tastetube import build, config, extract, judge, label, rank, store, youtube
+from tastetube import build, config, extract, hackertube, judge, label, rank, store, youtube
 from tastetube.llm import Runner
 
 
@@ -59,6 +59,9 @@ def main(argv: list[str] | None = None) -> int:
         p.add_argument("--limit", type=int, help="only the first N items; for tests")
         p.add_argument("--yes", action="store_true", help="do not ask before spending money")
     sub.add_parser("build", help="write site/data/videos.json")
+    p = sub.add_parser("hackertube", help="write site/data/videos.json from HackerTube's open data + courses.yaml")
+    p.add_argument("--data", required=True, type=Path, help="unzipped hackertube-data folder")
+    p.add_argument("--courses", type=Path, help="default: courses.yaml next to taste.yaml")
     p = sub.add_parser("all", help="extract -> meta -> label -> judge -> build")
     p.add_argument("--yes", action="store_true")
     sub.add_parser("stats", help="row counts for every stage")
@@ -69,6 +72,9 @@ def main(argv: list[str] | None = None) -> int:
     cfg = config.load(args.config)
     if args.cmd == "download":
         download(cfg)
+        return 0
+    if args.cmd == "hackertube":
+        hackertube.run(args.data, cfg, args.courses or root / "courses.yaml", cfg.site / "data" / "videos.json")
         return 0
     con = store.connect(cfg.work)
     runner = Runner(con)

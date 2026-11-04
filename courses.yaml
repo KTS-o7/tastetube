@@ -1,0 +1,235 @@
+# Courses: ordered watch paths built from videos Hacker News kept recommending.
+# Every video id must exist in HackerTube's open data (videos.jsonl).
+# Build the site data with:  tastetube hackertube --data path/to/hackertube-data
+#
+# Fields
+#   id        stable slug, used for course progress in the browser
+#   facets    taste.yaml facet ids this course belongs to
+#   mode      easy | focused | study  (how to watch it)
+#   why       one line on why this course is worth our time
+#   summary   what the course covers, in order
+#   takeaway  what you come away with
+#   prereqs   what to know first
+#   videos    YouTube ids, in watch order
+
+courses:
+  - id: nn-to-gpt
+    title: "Neural networks to GPT, from first principles"
+    facets: [ml-first-principles, llm-systems]
+    mode: study
+    why: "The full path from one neuron to a working GPT, with intuition first and code second."
+    summary: >
+      Three short 3Blue1Brown chapters give the picture of a network, gradient descent and
+      backprop. Karpathy then builds backprop by hand (micrograd), a character-level language
+      model (makemore), and a GPT, after 3Blue1Brown explains transformers and attention.
+      It ends with the tokenizer, the part of an LLM most people skip.
+    takeaway: "You can write and train a small GPT yourself and explain every line."
+    prereqs: "Python and high-school calculus. No ML background needed."
+    videos:
+      - aircAruvnKk  # But what is a neural network? (3Blue1Brown)
+      - IHZwWFHWa-w  # Gradient descent, how neural networks learn
+      - Ilg3gGewQ5U  # Backpropagation, intuitively
+      - VMj-3S1tku0  # Building micrograd (Karpathy)
+      - PaCmpygFfXo  # Building makemore (Karpathy)
+      - wjZofJX0v4M  # Transformers, the tech behind LLMs (3Blue1Brown)
+      - eMlx5fFNoYc  # Attention in transformers, step-by-step
+      - kCc8FmEb1nY  # Let's build GPT (Karpathy)
+      - zduSFxRajkE  # Let's build the GPT Tokenizer (Karpathy)
+
+  - id: llms-in-practice
+    title: "How LLMs are trained, tuned and used"
+    facets: [llm-systems]
+    mode: focused
+    why: "How a frontier model goes from raw web text to a useful assistant, and where it breaks."
+    summary: >
+      Starts with Karpathy's one-hour overview and his State of GPT talk on the training
+      pipeline, then the 3.5-hour deep dive. Jeremy Howard shows practical use from code.
+      Then reward modelling (the idea under RLHF), scaling laws, state space models as an
+      alternative to attention, and the hardware that sets the cost of all of it.
+    takeaway: "A working mental model of pretraining, fine-tuning, RLHF, scaling and serving cost."
+    prereqs: "Helps to have done 'Neural networks to GPT' first, but not required."
+    videos:
+      - zjkBMFhNj_g  # [1hr Talk] Intro to Large Language Models
+      - bZQun8Y4L2A  # State of GPT
+      - 7xTGNNLPyMI  # Deep Dive into LLMs like ChatGPT
+      - jkrNMKz9pWU  # A Hackers' Guide to Language Models (Jeremy Howard)
+      - PYylPRX6z4Q  # Training AI without a reward function (Robert Miles)
+      - 5eqRuVp65eY  # AI can't cross this line (scaling laws, Welch Labs)
+      - dKJEpOtVgXc  # Linear RNNs and state space models (Sasha Rush)
+      - kLiwvnr4L80  # Trends in deep learning hardware (Bill Dally)
+
+  - id: distributed-systems
+    title: "Distributed systems, from lecture hall to production"
+    facets: [systems]
+    mode: study
+    why: "Consensus, consistency and failure, taught by the people who wrote the papers."
+    summary: >
+      Kleppmann's and MIT 6.824's first lectures set up the problem. Diego Ongaro teaches
+      Paxos and then Raft, and Heidi Howard shows how much freedom consensus really has.
+      Kleppmann covers CRDTs and logs as the core of a database. It ends in production:
+      deterministic simulation testing, debugging live outages, and why complex systems fail.
+    takeaway: "You can reason about consensus, replication and failure modes in real systems."
+    prereqs: "Comfortable with networking and concurrency basics."
+    videos:
+      - UEAMfLPZZhE  # Distributed Systems 1.1: Introduction (Kleppmann)
+      - cQP8WApzIQQ  # MIT 6.824 Lecture 1: Introduction
+      - JEpsBg0AO6o  # Paxos lecture (Ongaro)
+      - YbZ3zDzDnrw  # Raft lecture (Ongaro)
+      - KTHOwgpMIiU  # Liberating Distributed Consensus (Heidi Howard)
+      - yCcWpzY8dIA  # Conflict Resolution for Eventual Consistency (Kleppmann)
+      - fU9hR3kiOK0  # Turning the database inside out (Kleppmann)
+      - 4fFDFbi3toc  # Testing distributed systems w/ deterministic simulation
+      - 30jNsCVLpAE  # Debugging Under Fire (Bryan Cantrill)
+      - 2S0k12uZR14  # How Complex Systems Fail (Richard Cook)
+
+  - id: performance
+    title: "Making software fast"
+    facets: [systems, cs-core]
+    mode: focused
+    why: "Performance as a craft: measure honestly, respect the hardware, keep the code simple."
+    summary: >
+      Emery Berger on why most performance measurements are wrong, and Gil Tene on latency.
+      Then the hardware view: Carruth on data structures, Mike Acton on data-oriented design,
+      a cache-friendly hash table, and what the compiler does for you. Casey Muratori's
+      philosophies of optimization and Netflix serving 800 Gb/s from one box close it out.
+    takeaway: "You know where time goes in a modern CPU and how to measure it without fooling yourself."
+    prereqs: "Some C, C++ or Rust helps."
+    videos:
+      - r-TLSBdHe1A  # Performance Matters (Emery Berger)
+      - lJ8ydIuPFeU  # How NOT to Measure Latency (Gil Tene)
+      - fHNmRkzxHWs  # Efficiency with Algorithms, Performance with Data Structures (Carruth)
+      - rX0ItVEVjHc  # Data-Oriented Design and C++ (Mike Acton)
+      - ncHmEUmJZf4  # Designing a fast, cache-friendly hash table (Kulukundis)
+      - bSkpMdDe4g4  # What Has My Compiler Done for Me Lately? (Godbolt)
+      - pgoetgxecw8  # Philosophies of Optimization (Casey Muratori)
+      - Ge3aKEmZcqY  # Simple Code, High Performance (Casey Muratori)
+      - 36qZYL5RlgY  # FreeBSD optimizations used by Netflix at 800Gb/s
+
+  - id: how-computers-work
+    title: "How computers really work: chips, languages, operating systems"
+    facets: [cs-core]
+    mode: study
+    why: "Every layer from a 6502 on a breadboard to containers, each taught by someone who built it."
+    summary: >
+      Ben Eater wires a 6502 computer, and the 27C3 talk reverse engineers the chip itself.
+      The Game Boy talk shows a whole machine end to end. Then languages: SICP's first
+      lecture, the metacircular interpreter, a lexer in Go and a live-coded WebAssembly
+      interpreter. Then the OS: threads, containers from scratch, and why operating systems
+      need to catch up with today's hardware.
+    takeaway: "You can trace a program from source code to transistors and back."
+    prereqs: "Any programming language."
+    videos:
+      - LnzuMJLZRdU  # "Hello, world" from scratch on a 6502 (Ben Eater)
+      - fWqBmmPQP40  # Reverse Engineering the MOS 6502 CPU (27C3)
+      - HyzD8pNlpwI  # The Ultimate Game Boy Talk (33C3)
+      - -J_xL4IGhJA  # SICP Lecture 1A (MIT)
+      - OyfBQmvr2Hc  # The Most Beautiful Program Ever Written (William Byrd)
+      - HxaD_trXwRE  # Lexical Scanning in Go (Rob Pike)
+      - r-A78RgMhZU  # Dave Beazley live-codes a WebAssembly interpreter
+      - KXuZi9aeGTw  # User-level threads... with threads (Paul Turner)
+      - 8fi7uSYlOdc  # Containers From Scratch (Liz Rice)
+      - 36myc8wQhLo  # It's Time for Operating Systems to Rediscover Hardware (USENIX)
+
+  - id: offensive-security
+    title: "Offensive security: how systems really get broken"
+    facets: [security]
+    mode: focused
+    why: "The classic conference talks on breaking software, CPUs, hardware and people."
+    summary: >
+      Opens with the theory of why parsers get exploited, then the Stuxnet analysis.
+      Christopher Domas fuzzes the x86 instruction set, finds hardware backdoors and builds a
+      compiler that emits only mov. Then defence from the inside (iOS, Xbox One) and supply-chain
+      trust in hardware. It ends with physical pen testing, OPSEC, prompt injection, and a
+      sceptical keynote on machine learning in security.
+    takeaway: "An attacker's view of software, CPUs, hardware supply chains and AI systems."
+    prereqs: "C and assembly basics help for the middle third."
+    videos:
+      - 3kEfedtQVOY  # 28c3: The Science of Insecurity
+      - rOwMW6agpTI  # 27C3: Adventures in analyzing Stuxnet
+      - KrksBdWcZgQ  # Breaking the x86 Instruction Set (Domas)
+      - jmTwlEh8L7g  # GOD MODE UNLOCKED: hardware backdoors in x86 (Domas)
+      - R7EEoWg6Ekk  # The MoVfuscator (Domas)
+      - BLGFriOKz6U  # Behind the Scenes of iOS Security (Black Hat)
+      - U7VwtOrwceo  # Guarding Against Physical Attacks: The Xbox One Story
+      - Hzb37RyagCQ  # 36C3: Open Source is Insufficient to Solve Trust Problems in Hardware
+      - rnmcRTnTNC8  # Tactics of Physical Pen Testers
+      - 9XaYdCdwiWU  # The Grugq: OPSEC
+      - GJVSDjRXVoo  # Prompt injection, demonstrated (Steve Mould)
+      - ajGX7odA87k  # USENIX Security '18: why ML won't fix security
+
+  - id: computing-history
+    title: "The history of computing, told by the people who built it"
+    facets: [history]
+    mode: easy
+    why: "From mechanical fire-control computers to Netscape, mostly in the builders' own words."
+    summary: >
+      James Burke traces computing back to its roots, then Navy training films explain
+      mechanical computers and the Apollo Guidance Computer flies to the Moon. Silicon
+      Valley's secret military history, Engelbart's 1968 demo and Sketchpad set up the modern
+      era. Bell Labs explains UNIX, and Ken Thompson tells the story to Brian Kernighan.
+      Alan Kay, the BBC's Micro Men, the Netscape documentary and Bret Victor finish it.
+    takeaway: "Where today's ideas came from, and which good ones we forgot."
+    prereqs: "None."
+    videos:
+      - z6yL0_sDnX0  # James Burke Connections, Ep. 4 "Faith in Numbers"
+      - s1i-dnAH9Y4  # Mechanical Computer: Basic Mechanisms in Fire Control Computers
+      - B1J2RMorJXM  # Light Years Ahead: The 1969 Apollo Guidance Computer
+      - ZTC_RxWN_xo  # Secret History of Silicon Valley
+      - yJDv-zdhzMY  # The Mother of All Demos (Engelbart, 1968)
+      - 6orsmFndx_o  # Ivan Sutherland Sketchpad Demo 1963
+      - tc4ROCJYbm0  # AT&T Archives: The UNIX Operating System
+      - EY6q5dv_B-o  # Ken Thompson interviewed by Brian Kernighan
+      - oKg1hTOQXoY  # Alan Kay at OOPSLA 1997
+      - XXBxV6-zamM  # Micro Men (2009)
+      - 4Q7FTjhvZ7Y  # Project Code Rush: the beginnings of Netscape / Mozilla
+      - 8pTEmbeENF4  # Bret Victor: The Future of Programming
+
+  - id: explainer-craft
+    title: "How to explain things well"
+    facets: [explainer-craft]
+    mode: focused
+    why: "Reference material for making explainer videos: speaking, writing, visuals and story."
+    summary: >
+      Patrick Winston on how to speak and Larry McEnerney on writing that readers value come
+      first. Then the best visual explainers on HN, watched as craft: 3Blue1Brown, Freya
+      Holmér's curves, Hans Rosling's data, a lesson in colour maps and Powers of Ten. Bret
+      Victor on immediate feedback and representation, Every Frame a Painting on editing, and
+      Ira Glass on the gap between taste and skill close it out.
+    takeaway: "A toolkit for structuring, visualising and telling an explanation."
+    prereqs: "None."
+    videos:
+      - Unzc731iCUY  # How to Speak (Patrick Winston, MIT)
+      - vtIzMaLkCaM  # The Craft of Writing Effectively (Larry McEnerney)
+      - spUNpyF58BY  # But what is the Fourier Transform? (3Blue1Brown)
+      - fNk_zzaMoSs  # Vectors, Essence of linear algebra ch. 1 (3Blue1Brown)
+      - aVwxzDHniEw  # The Beauty of Bézier Curves (Freya Holmér)
+      - jbkSRLYSojo  # Hans Rosling's 200 Countries, 200 Years, 4 Minutes
+      - xAoljeRJ3lU  # A Better Default Colormap for Matplotlib
+      - 0fKBhvDjuy0  # Powers of Ten (1977)
+      - PUv66718DII  # Bret Victor: Inventing on Principle
+      - agOdP2Bmieg  # Bret Victor: The Humane Representation of Thought
+      - Z1PCtIaM_GQ  # Jackie Chan: How to Do Action Comedy (Every Frame a Painting)
+      - X2wLP0izeJE  # Ira Glass on Storytelling
+
+  - id: building-companies
+    title: "Building a company as a technical founder"
+    facets: [building]
+    mode: easy
+    why: "Startup and bootstrapping advice HN keeps returning to, plus how to lead engineers."
+    summary: >
+      Sam Altman's first How to Start a Startup lecture and Peter Thiel on monopoly set the
+      venture view. DHH and Jason Cohen make the case for bootstrapping, and Mike Monteiro on
+      getting paid. Then running the company: Ed Catmull on creative culture, Bryan Cantrill on
+      technology leadership, Conway's law, and Alan Kay on inventing the future.
+    takeaway: "Two clear models for a company (venture and bootstrapped) and how to lead engineers."
+    prereqs: "None."
+    videos:
+      - CBYhVcO4WgI  # How to Start a Startup, Lecture 1 (Sam Altman)
+      - 3Fx5Q8xGU8k  # Competition is for Losers (Peter Thiel)
+      - 0CDXJ6bMkMY  # David Heinemeier Hansson at Startup School 08
+      - otbnC2zE2rw  # Designing the Ideal Bootstrapped Business (Jason Cohen)
+      - jVkLVRt6c1U  # Mike Monteiro on getting paid
+      - k2h2lvhzMDc  # Ed Catmull, Pixar: Keep Your Crises Small
+      - 9QMGAtxUlAc  # Principles of Technology Leadership (Bryan Cantrill)
+      - 5IUj1EZwpJY  # The Only Unbreakable Law (Conway's law, Casey Muratori)
+      - id1WShzzMCQ  # How to Invent the Future I (Alan Kay)
