@@ -104,8 +104,8 @@ def store_course(con, course_id: str, meta: dict | None, lectures: list[str]) ->
         return
     con.executemany("INSERT INTO course_items VALUES (?,?,?)", [(course_id, i, v) for i, v in enumerate(lectures)])
     ok = con.execute(
-        f"SELECT COUNT(*), COALESCE(SUM(duration), 0) FROM yt WHERE available = 1 AND video_id IN "
-        f"(SELECT video_id FROM course_items WHERE course_id = ?)",
+        "SELECT COUNT(*), COALESCE(SUM(duration), 0) FROM yt WHERE available = 1 AND video_id IN "
+        "(SELECT video_id FROM course_items WHERE course_id = ?)",
         (course_id,),
     ).fetchone()
     sn = meta.get("snippet", {})
