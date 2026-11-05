@@ -1,6 +1,5 @@
-# Our taste. The judge model reads the `taste` section as its brief.
-# The library is long-form only: videos of 30+ minutes and whole courses (playlists).
-# Edit it freely: only the judge stage re-runs when it changes (cheap).
+# Our taste. Courses in courses.yaml are filed under these facets, and the site shows
+# one chip per facet. `who` and `avoid` are the brief we curate courses against.
 
 taste:
   who: >
@@ -42,21 +41,3 @@ taste:
     - hype, drama, reaction or clickbait videos
     - shallow listicles and "top 10" videos
     - beginner tutorials for things we already know (intro Python, basic Git)
-
-  # YouTube URLs we already love. The judge uses their titles as taste anchors.
-  # Add 5-15 of your all-time favourites; this sharpens the ranking more than anything else.
-  seeds: []
-
-ranking:
-  # taste score = fit_weight[fit] x log2(1 + community score). Fit 0 is hidden in "Our taste" mode.
-  fit_weight: {1: 1.0, 2: 2.0, 3: 3.0}
-
-pipeline:
-  min_own_chars: 100        # a mention counts only with this much of the commenter's own text
-  min_people: 3             # ...from at least this many different people
-  min_months: 3             # ...across at least this many different months
-  mentions_per_video: 20    # labelled sample per video, spread across people
-  min_community_score: 2    # drop videos HN recommended in fewer months than this
-  min_minutes: 30           # long-form gate: shorter videos are dropped before any LLM call
-  label_model: claude-haiku-5-5
-  judge_model: claude-sonnet-5-5

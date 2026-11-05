@@ -25,7 +25,6 @@ from pathlib import Path
 import yaml
 
 from tastetube.config import Config
-from tastetube.links import excerpt
 
 LONG_TYPES = {"talk", "lecture", "course", "documentary", "interview", "podcast"}
 REC = {"strong_rec": 0, "rec": 1}  # stance -> rank, best first
@@ -65,6 +64,14 @@ def load_courses(path: Path, facet_ids: set[str]) -> list[Course]:
             raise ValueError(f"{where}: a video appears twice")
         courses.append(course)
     return courses
+
+
+def excerpt(text: str, limit: int = 280) -> str:
+    """Cut text at a word boundary and add an ellipsis if it was cut."""
+    text = " ".join(text.split())
+    if len(text) <= limit:
+        return text
+    return text[:limit].rsplit(" ", 1)[0].rstrip(".,;:") + "…"
 
 
 def read_jsonl(path: Path) -> list[dict]:
@@ -121,7 +128,7 @@ def _course(c: Course, rank: int, videos: dict[str, dict], recs: dict[str, list[
         "f": 3, "ts": 1000.0 - rank,  # courses lead "Our taste", in courses.yaml order
         "fa": c.facets, "w": c.why, "su": c.summary, "c": "Courses", "k": "course",
         "tk": c.takeaway, "pr": c.prereqs, "md": c.mode,
-        "cr": 1, "cu": 1, "it": len(lectures),
+        "cr": 1, "it": len(lectures),
         "ls": [{"id": v["vid"], "t": v["title"], "ch": v["channel"], "d": 0} for v in lectures],
         "th": lectures[0]["vid"], "cp": [], "m": quotes[:3],
     }
@@ -148,7 +155,6 @@ def collect(data_dir: Path, courses: list[Course], cfg: Config) -> dict:
             "demo": False,
             "source": "hackertube",
             "durations": False,
-            "min_minutes": cfg.pipeline.min_minutes,
             "facets": [{"id": f.id, "name": f.name, "about": f.about} for f in cfg.facets],
             "counts": {
                 "videos": len(library),

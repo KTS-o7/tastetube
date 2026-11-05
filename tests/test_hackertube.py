@@ -48,7 +48,7 @@ def test_courses_and_library(data):
     items = {v["id"]: v for v in out["videos"]}
 
     c = out["videos"][0]
-    assert c["id"] == "tt-c1" and c["cr"] == 1 and c["cu"] == 1 and c["f"] == 3
+    assert c["id"] == "tt-c1" and c["cr"] == 1 and c["f"] == 3
     assert [lec["id"] for lec in c["ls"]] == ["shortclip01", "AAAAAAAAAAA"]  # courses.yaml order
     assert c["th"] == "shortclip01" and c["yr"] == [2019, 2020] and c["n"] == 2
     assert "[VIDEO]" not in json.dumps(out)
