@@ -1,16 +1,12 @@
 [project]
 name = "tastetube"
 version = "0.1.0"
-description = "YouTube videos that Hacker News keeps recommending, ranked for our taste."
+description = "Courses and a long-form library from the YouTube videos Hacker News keeps recommending."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 dependencies = [
-    "anthropic>=0.40",
-    "duckdb>=1.1",
-    "huggingface_hub>=0.25",
     "pyyaml>=6",
-    "requests>=2.31",
 ]
 
 [project.optional-dependencies]

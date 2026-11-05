@@ -194,16 +194,9 @@ function renderChips() {
 function headline() {
   const c = state.data.meta.counts;
   const fmt = (n) => Number(n || 0).toLocaleString("en-IN");
-  const what = c.courses ? `long-form videos and courses` : `long-form videos`;
-  if (state.data.meta.source === "hackertube") {
-    return state.mode === "taste"
-      ? `<span class="n-us">${fmt(c.ours)}</span> courses we built from <span class="n-hn">${fmt(c.videos)}</span> long-form talks and lectures Hacker News kept recommending.`
-      : `<span class="n-hn">${fmt(c.videos)}</span> long-form talks, lectures and documentaries Hacker News kept recommending, ${FIRST_YEAR} to ${state.lastYear}.`;
-  }
-  if (state.mode === "taste") {
-    return `<span class="n-hn">${fmt(c.videos)}</span> ${what} Hacker News kept recommending. <span class="n-us">${fmt(c.ours)}</span> are worth our time.`;
-  }
-  return `<span class="n-hn">${fmt(c.videos)}</span> ${what} Hacker News kept recommending, ${FIRST_YEAR} to ${state.lastYear}.`;
+  return state.mode === "taste"
+    ? `<span class="n-us">${fmt(c.ours)}</span> courses we built from <span class="n-hn">${fmt(c.videos)}</span> long-form talks and lectures Hacker News kept recommending.`
+    : `<span class="n-hn">${fmt(c.videos)}</span> long-form talks, lectures and documentaries Hacker News kept recommending, ${FIRST_YEAR} to ${state.lastYear}.`;
 }
 
 function pressed(selector, attr, value) {
@@ -237,21 +230,18 @@ function render() {
 }
 
 // ---------- player ----------
-function embed(id, start, list) {
+function embed(id, start) {
   const params = new URLSearchParams({ autoplay: "1", rel: "0" });
   if (start) params.set("start", String(start));
-  if (list) params.set("list", list);
   return `<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?${params}" title="Video player" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
 }
 
 function play(id, start = 0) {
   const v = state.open;
   state.playing = id;
-  $("#p-yt").href = v.cr && !v.cu
-    ? `https://www.youtube.com/playlist?list=${encodeURIComponent(v.id)}`
-    : `https://www.youtube.com/watch?v=${encodeURIComponent(id)}`;
+  $("#p-yt").href = `https://www.youtube.com/watch?v=${encodeURIComponent(id)}`;
   $("#p-frame").innerHTML = v.e || v.cr
-    ? embed(id, start, v.cr && !v.cu ? v.id : null)
+    ? embed(id, start)
     : `<div class="noembed"><img src="${thumb(id)}" alt=""><p>The owner turned off playback on other sites. <a href="https://www.youtube.com/watch?v=${esc(id)}&amp;t=${start}" target="_blank" rel="noopener">Watch it on YouTube</a>.</p></div>`;
   if (v.cr) renderCourse(v);
 }
@@ -436,13 +426,9 @@ function wire() {
 
 // ---------- boot ----------
 async function load() {
-  for (const url of ["data/videos.json", "data/demo.json"]) {
-    try {
-      const r = await fetch(url, { cache: "no-cache" });
-      if (r.ok) return await r.json();
-    } catch { /* try the next file */ }
-  }
-  throw new Error("No data file found. Run `tastetube build` to create site/data/videos.json.");
+  const r = await fetch("data/videos.json", { cache: "no-cache" });
+  if (!r.ok) throw new Error("No data file found. Run `tastetube hackertube --data DIR` to create site/data/videos.json.");
+  return r.json();
 }
 
 async function main() {
@@ -470,7 +456,7 @@ async function main() {
     state.mode = "all";
     const b = document.querySelector('.mode button[data-mode="taste"]');
     b.disabled = true;
-    b.title = "Run `tastetube judge` to rank videos for our taste.";
+    b.title = "Add courses to courses.yaml to fill Our taste.";
   }
   if (data.meta.durations === false) {
     document.querySelectorAll("#len button").forEach((b) => {
@@ -480,16 +466,9 @@ async function main() {
     });
     if (state.len !== "course") state.len = "any";
   }
-  if (data.meta.source === "hackertube") {
-    const banner = $("#banner");
-    banner.hidden = false;
-    banner.innerHTML = 'Videos, summaries and Hacker News quotes come from <a href="https://hackertube.org/data">HackerTube’s open data</a> (ODC-By 1.0). The courses are our own picks and order.';
-  }
-  if (data.meta.demo) {
-    const banner = $("#banner");
-    banner.hidden = false;
-    banner.textContent = "Demo data. The titles are real videos, but the scores, cards and quotes are made up. Run the pipeline to fill this page with real picks.";
-  }
+  const banner = $("#banner");
+  banner.hidden = false;
+  banner.innerHTML = 'Videos, summaries and Hacker News quotes come from <a href="https://hackertube.org/data">HackerTube’s open data</a> (ODC-By 1.0). The courses are our own picks and order.';
   render();
 }
 

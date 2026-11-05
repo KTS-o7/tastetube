@@ -1,9 +1,9 @@
 # Notes for Claude Code
 
-- Pipeline stages share one SQLite file, `work/tastetube.db`. Each stage reads and writes it and can re-run alone.
-- Never delete `llm_cache` or `batches` rows: they are paid-for answers and in-flight batches.
-- DuckDB is used only in `tastetube/extract.py` for the 12 GB Parquet archive. Keep other logic in Python and SQLite so tests stay offline.
-- Tests use `tests/fakes.py` (fake Claude) and `FakeYT` in `tests/test_pipeline.py` (fake YouTube). Run `pytest -q` after every change.
-- An item ID longer than 11 characters is a course (playlist); see `links.is_course`. The long-form gate (`min_minutes`) runs before labelling.
-- `site/` is plain HTML, CSS and JavaScript with no build step. It reads only `site/data/videos.json` (falls back to `demo.json`).
-- The judge's cache key includes the full system prompt, so any change to `taste.yaml` or the prompt re-judges every video.
+- `tastetube hackertube --data DIR` is the only stage. It reads HackerTube's `videos.jsonl` and `mentions.jsonl` (download from https://hackertube.org/data, keep it outside the repo) plus `courses.yaml`, and writes `site/data/videos.json`, which is committed.
+- Every video id in `courses.yaml` must exist in HackerTube's data. Keep to videos with `hn.recommenders >= 2`.
+- Do not write YouTube API data (durations, descriptions, publish dates) into `videos.json`: YouTube's terms do not allow redistributing it.
+- `site/` is plain HTML, CSS and JavaScript with no build step. It reads only `site/data/videos.json`. Course items have `cr: 1` and a lecture list `ls`; they are not YouTube playlists.
+- The Pages workflow replaces `?v=dev` in `site/index.html` with the commit hash. Keep the `?v=dev` suffix on asset links.
+- Run `pytest -q` after every change. Tests are offline and build a tiny fixture of HackerTube data.
+- Credit HackerTube and open-index/hacker-news (both ODC-By 1.0) wherever the data is shown.
